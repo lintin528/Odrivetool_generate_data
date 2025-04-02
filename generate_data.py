@@ -4,10 +4,17 @@ import time
 import csv
 import random
 import numpy as np
+import os
+import datetime
+
 
 # Find a connected ODrive (this will block until you connect one)
 print("Finding an ODrive...")
 odrv0 = odrive.find_any()
+folder_path = './data'
+if not os.path.exists(folder_path):
+    os.makedirs(folder_path)
+
 if odrv0:
     print(f"find motor ")
 
@@ -34,13 +41,13 @@ get_input = {
 }
 
 # Open a CSV file to write the data
-iteration_times = 5
+iteration_times = 500
 Ts = 0.1
 time_array = np.arange(0, 12, Ts)
 
 for i in range(iteration_times):
     freq = np.random.uniform(0.5, 1)
-    sine_amplitude = np.random.uniform(1, 2)
+    sine_amplitude = np.random.uniform(0.5, 1)
 
     t_peak1 = np.random.uniform(2, 5)
     t_peak2 = np.random.uniform(t_peak1 + 4, 6)
@@ -49,7 +56,10 @@ for i in range(iteration_times):
     print(slope_down, t_peak1, t_peak2)
     slope_up2 = np.random.uniform(0.5, 3)
 
-    with open(f'sine_input_{i}.csv', mode='w', newline='') as file:
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    file_name = f"{folder_path}/sine_input_{i}_{timestamp}.csv"
+    with open(file_name, mode='w', newline='') as file:
+        print(f"run sine input round {i} \n")
         writer = csv.writer(file)
         writer.writerow(['Timestamp', 'Encoder Position', 'target position'])
 
@@ -70,9 +80,11 @@ for i in range(iteration_times):
 
             writer.writerow([timestamp, (encoder_pos-start_pos), (position-start_pos)])
             time.sleep(0.1)  # Adjust the sleep time as needed
-    print(f"run step input round {i} \n")
-
-    with open(f'three_stage_ramp_input_{i}.csv', mode='w', newline='') as file:
+    
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    file_name = f"{folder_path}/three_stage_ramp_input_{i}_{timestamp}.csv"
+    with open(file_name, mode='w', newline='') as file:
+        print(f"run ramp input round {i} \n")
         writer = csv.writer(file)
         writer.writerow(['Timestamp', 'Encoder Position', 'target position'])
         
@@ -95,6 +107,6 @@ for i in range(iteration_times):
 
             writer.writerow([timestamp, (encoder_pos-start_pos), (position-start_pos)])
             time.sleep(0.1)  # Adjust the sleep time as needed
-    print(f"run ramp input round {i} \n")
+    
 
 print("Data collection complete.")
