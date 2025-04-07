@@ -40,7 +40,7 @@ get_input = {
     'three_stage_ramp': three_stage_ramp,
 }
 
-def run_motor_control(input_name, i, folder_path, get_input_fn, **input_params):
+def run_motor_control(input_name, i, folder_path, get_input_fn, filtered, **input_params):
     timestamp_str = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     file_name = f"{folder_path}/{input_name}_input_{i}_{timestamp_str}.csv"
     print(f"Run {input_name} input round {i}\n")
@@ -56,6 +56,13 @@ def run_motor_control(input_name, i, folder_path, get_input_fn, **input_params):
         # Setup ODrive for position control
         odrv0.axis0.controller.config.control_mode = CONTROL_MODE_POSITION_CONTROL
         odrv0.axis0.requested_state = AxisState.CLOSED_LOOP_CONTROL
+
+        # ----  Filtered Position Control  ----
+        if(filtered):
+            odrv0.axis0.controller.config.input_filter_bandwidth = 20.0 # Set the filter bandwidth [1/s]
+            odrv0.axis0.controller.config.input_mode = InputMode.POS_FILTER # Activate the setpoint filter
+        # ----  Filtered Position Control  ----
+
         odrv0.axis0.controller.input_pos = position
 
         target_positions = get_input_fn(time_array, **input_params)
@@ -90,6 +97,7 @@ for i in range(iteration_times):
         i=i,
         folder_path=folder_path,
         get_input_fn=get_input['sine'],
+        filtered=True,
         frequency=freq,
         amplitude=sine_amplitude
     )
@@ -99,6 +107,7 @@ for i in range(iteration_times):
         i=i,
         folder_path=folder_path,
         get_input_fn=get_input['three_stage_ramp'],
+        filtered=True,
         t_peak1=t_peak1,
         t_peak2=t_peak2,
         slope_up1=slope_up1,
